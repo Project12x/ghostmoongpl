@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include <ghostmoon/ui/Geometry.h>
 #include <gtest/gtest.h>
 

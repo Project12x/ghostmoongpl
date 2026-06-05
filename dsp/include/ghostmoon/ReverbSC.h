@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
 #pragma once
 // ghostmoon DSP: ReverbSC
 // Sean Costello's 8-delay-line stereo FDN reverb (Csound reverbsc opcode).

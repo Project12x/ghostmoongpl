@@ -1,29 +1,39 @@
 cmake_minimum_required(VERSION 3.22)
-project(ghostmoongpl LANGUAGES CXX)
+project(ghostmoon_oss LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---------------------------------------------------------------------------
-# GhostmoonGPL: header-only, copyleft (LGPL-2.1-or-later) DSP components.
-# Kept separate from the MIT Ghostmoon library so proprietary plugins never
-# link copyleft code by accident. See LICENSE and README.md.
+# ghostmoon-oss: the distributable open-source slice of Ghostmoon that GPL
+# plugins (Nessy, Breadbin, Pedalboard3) can legally link. Mixed per-file
+# licensing: first-party shared code is MIT; copyleft-derived DSP (ReverbSC,
+# Csound-derived) is LGPL-2.1-or-later. Every file carries an SPDX header.
+# See LICENSES/ and README.md.
 # ---------------------------------------------------------------------------
-add_library(ghostmoongpl INTERFACE)
-target_include_directories(ghostmoongpl INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/dsp/include")
-target_compile_features(ghostmoongpl INTERFACE cxx_std_20)
-add_library(ghostmoongpl::ghostmoongpl ALIAS ghostmoongpl)
 
-# Header-only JUCE UI primitives (consumer must provide JUCE on the include path).
-add_library(ghostmoongpl_ui INTERFACE)
-target_include_directories(ghostmoongpl_ui INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/ui/include")
-target_compile_features(ghostmoongpl_ui INTERFACE cxx_std_20)
-add_library(ghostmoongpl::ui ALIAS ghostmoongpl_ui)
+# DSP (header-only): MIT utils (future) + LGPL ReverbSC family.
+add_library(ghostmoon_oss_dsp INTERFACE)
+target_include_directories(ghostmoon_oss_dsp INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/dsp/include")
+target_compile_features(ghostmoon_oss_dsp INTERFACE cxx_std_20)
+add_library(ghostmoon_oss::dsp ALIAS ghostmoon_oss_dsp)
 
-option(GHOSTMOONGPL_BUILD_TESTS "Build GhostmoonGPL reverb tests (GoogleTest)" OFF)
-if(GHOSTMOONGPL_BUILD_TESTS)
+# Core (header-only, MIT): skin-neutral UI scaffolding (Geometry, ScaledEditor).
+# Geometry is JUCE-free; ScaledEditor needs JUCE provided by the consumer.
+add_library(ghostmoon_oss_core INTERFACE)
+target_include_directories(ghostmoon_oss_core INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/core/include")
+target_compile_features(ghostmoon_oss_core INTERFACE cxx_std_20)
+add_library(ghostmoon_oss::core ALIAS ghostmoon_oss_core)
+
+# Synthwave UI skin (header-only, MIT): Breadbin's neon draws. Depends on core.
+add_library(ghostmoon_oss_ui_synthwave INTERFACE)
+target_include_directories(ghostmoon_oss_ui_synthwave INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/ui/include")
+target_compile_features(ghostmoon_oss_ui_synthwave INTERFACE cxx_std_20)
+target_link_libraries(ghostmoon_oss_ui_synthwave INTERFACE ghostmoon_oss_core)
+add_library(ghostmoon_oss::ui_synthwave ALIAS ghostmoon_oss_ui_synthwave)
+
+option(GHOSTMOON_OSS_BUILD_TESTS "Build ghostmoon-oss tests (GoogleTest)" OFF)
+if(GHOSTMOON_OSS_BUILD_TESTS)
     enable_testing()
     include(FetchContent)
     FetchContent_Declare(googletest
@@ -31,14 +41,13 @@ if(GHOSTMOONGPL_BUILD_TESTS)
         GIT_TAG        v1.15.2)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
-
-    add_executable(ghostmoongpl_tests tests/test_reverbscx.cpp)
-    target_link_libraries(ghostmoongpl_tests PRIVATE ghostmoongpl GTest::gtest_main)
     include(GoogleTest)
-    gtest_discover_tests(ghostmoongpl_tests)
 
-    # JUCE-free geometry math tests — only includes Geometry.h, no JUCE dependency.
-    add_executable(ghostmoongpl_ui_tests tests/test_ui_geometry.cpp)
-    target_link_libraries(ghostmoongpl_ui_tests PRIVATE ghostmoongpl_ui GTest::gtest_main)
-    gtest_discover_tests(ghostmoongpl_ui_tests)
+    add_executable(ghostmoon_oss_dsp_tests tests/test_reverbscx.cpp)
+    target_link_libraries(ghostmoon_oss_dsp_tests PRIVATE ghostmoon_oss_dsp GTest::gtest_main)
+    gtest_discover_tests(ghostmoon_oss_dsp_tests)
+
+    add_executable(ghostmoon_oss_geometry_tests tests/test_ui_geometry.cpp)
+    target_link_libraries(ghostmoon_oss_geometry_tests PRIVATE ghostmoon_oss_core GTest::gtest_main)
+    gtest_discover_tests(ghostmoon_oss_geometry_tests)
 endif()

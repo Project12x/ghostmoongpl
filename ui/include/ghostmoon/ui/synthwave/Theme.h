@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 #include <juce_graphics/juce_graphics.h>
 namespace gm::ui::theme {

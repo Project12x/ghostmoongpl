@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 // Controls.h — header-only JUCE 8 render primitives for the Breadbin neon synthwave skin.
 //
@@ -8,7 +9,7 @@
 // It is NOT compiled by ghostmoongpl_ui_tests (that target is JUCE-free).
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <ghostmoon/ui/Theme.h>
+#include <ghostmoon/ui/synthwave/Theme.h>
 #include <ghostmoon/ui/Geometry.h>
 
 namespace gm::ui {

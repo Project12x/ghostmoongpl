@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
 #pragma once
 // ghostmoon DSP: ReverbSCAdapter
 // Convenience wrapper around gm::ReverbSC with a single decay parameter

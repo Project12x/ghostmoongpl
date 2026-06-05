@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 // Chrome.h — header-only JUCE 8 chrome render primitives for the Breadbin neon synthwave skin.
 //
@@ -7,7 +8,7 @@
 // This file requires the consumer's build to have JUCE on the include path.
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <ghostmoon/ui/Theme.h>
+#include <ghostmoon/ui/synthwave/Theme.h>
 
 namespace gm::ui {
 

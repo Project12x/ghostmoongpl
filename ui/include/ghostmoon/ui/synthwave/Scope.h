@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 // Scope.h — header-only JUCE 8 CRT phosphor scope render primitives for the Breadbin skin.
 //
@@ -8,7 +9,7 @@
 // This file requires the consumer's build to have JUCE on the include path.
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <ghostmoon/ui/Theme.h>
+#include <ghostmoon/ui/synthwave/Theme.h>
 
 namespace gm::ui {
 
