@@ -36,4 +36,9 @@ if(GHOSTMOONGPL_BUILD_TESTS)
     target_link_libraries(ghostmoongpl_tests PRIVATE ghostmoongpl GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(ghostmoongpl_tests)
+
+    # JUCE-free geometry math tests — only includes Geometry.h, no JUCE dependency.
+    add_executable(ghostmoongpl_ui_tests tests/test_ui_geometry.cpp)
+    target_link_libraries(ghostmoongpl_ui_tests PRIVATE ghostmoongpl_ui GTest::gtest_main)
+    gtest_discover_tests(ghostmoongpl_ui_tests)
 endif()
