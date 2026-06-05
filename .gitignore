@@ -1,0 +1,17 @@
+# Build output
+/build/
+/cmake-build-*/
+/out/
+
+# IDE / editor
+.vs/
+.idea/
+*.user
+
+# Compiler / linker artifacts
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.dll
