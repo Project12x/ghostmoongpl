@@ -18,8 +18,7 @@ namespace gm::ui {
 // ---------------------------------------------------------------------------
 namespace detail {
 
-// parts.jsx uses degrees measured clockwise from 3 o'clock (SVG convention).
-// JUCE addCentredArc uses radians measured clockwise from 3 o'clock.
+// angles in degrees clockwise from 3 o'clock (east), matching JUCE addCentredArc.
 // The knob track in parts.jsx: arcPath(cx,cy,r, 135, 405)
 //   135 deg CW from east = 7 o'clock  (start of sweep)
 //   405 deg CW from east = 135+270    (end of sweep)
@@ -111,10 +110,11 @@ inline void drawKnob(juce::Graphics& g,
     const float angRad = kKnobStartRad + v01 * kKnobSweep;
 
     if (bipolar) {
-        // 12-o'clock = 270° from east = 270*pi/180 rad
-        static constexpr float k12 = 270.0f * juce::MathConstants<float>::pi / 180.0f;
-        const float arcFrom = juce::jmin(k12, angRad);
-        const float arcTo   = juce::jmax(k12, angRad);
+        // Reuse bipolarFill to compute start/end proportions, then convert to radians.
+        // bipolarFill returns {startProp, endProp} in [0,1] of the 270° sweep.
+        auto [startProp, endProp] = gm::ui::bipolarFill(v01);
+        const float arcFrom = kKnobStartRad + startProp * kKnobSweep;
+        const float arcTo   = kKnobStartRad + endProp   * kKnobSweep;
         if ((arcTo - arcFrom) > 0.01f)
             strokeArcGlow(g, cx, cy, r, arcFrom, arcTo, 3.0f, accent);
     } else {
@@ -177,7 +177,7 @@ inline void drawKnob(juce::Graphics& g,
         pointer.lineTo(cx + (pointerOffset + pointerLen) * std::cos(angDegRad),
                        cy + (pointerOffset + pointerLen) * std::sin(angDegRad));
         g.setColour(theme::glow(accent, 0.5f));
-        g.strokePath(pointer, juce::PathStrokeType(4.0f,
+        g.strokePath(pointer, juce::PathStrokeType(3.5f,
                                                     juce::PathStrokeType::curved,
                                                     juce::PathStrokeType::rounded));
         g.setColour(accent);
@@ -239,9 +239,11 @@ inline void drawHSlider(juce::Graphics& g,
             fillW = v01 * bw;
         }
         if (fillW > 0.5f) {
-            // Glow layer
+            // Glow layer: coincident with fill rect, expanded ~1px so halo only
+            // surrounds the filled portion, not the empty track.
             g.setColour(theme::glow(accent, 0.5f));
-            g.fillRoundedRectangle(fillX, trackY, fillW, trackH, trackR);
+            g.fillRoundedRectangle(fillX - 1.0f, trackY - 1.0f,
+                                   fillW + 2.0f, trackH + 2.0f, trackR + 1.0f);
             // Sharp fill on top
             g.setColour(accent);
             g.fillRoundedRectangle(fillX, trackY, fillW, trackH, trackR);
@@ -257,7 +259,7 @@ inline void drawHSlider(juce::Graphics& g,
     // --- Thumb: 13×18, vertical gradient #D2D2DC→#5A5A66 ---
     const float thumbW = 13.0f;
     const float thumbH = bh;  // full slot height = 18px
-    const float thumbX = bx + v01 * bw - thumbW * 0.5f;
+    const float thumbX = juce::jlimit(bx, bx + bw - thumbW, bx + v01 * bw - thumbW * 0.5f);
     const float thumbY = by;
     const float thumbR = 3.0f;
 
@@ -322,9 +324,11 @@ inline void drawVSlider(juce::Graphics& g,
     const float fillH = v01 * bh;
     const float fillY = by + bh - fillH;
     if (fillH > 0.5f) {
-        // Glow layer
+        // Glow layer: coincident with fill rect, expanded ~1px so halo only
+        // surrounds the filled portion, not the empty track.
         g.setColour(theme::glow(accent, 0.5f));
-        g.fillRoundedRectangle(trackX, fillY, trackW, fillH, trackR);
+        g.fillRoundedRectangle(trackX - 1.0f, fillY - 1.0f,
+                               trackW + 2.0f, fillH + 2.0f, trackR + 1.0f);
         // Sharp fill on top
         g.setColour(accent);
         g.fillRoundedRectangle(trackX, fillY, trackW, fillH, trackR);
@@ -334,7 +338,8 @@ inline void drawVSlider(juce::Graphics& g,
     const float thumbW = bw;   // full slot width = 18px
     const float thumbH = 11.0f;
     const float thumbX = bx;
-    const float thumbY = fillY - thumbH * 0.5f;  // centred on fill top
+    const float thumbY = juce::jlimit(by, by + bh - thumbH,
+                                      fillY - thumbH * 0.5f);  // centred on fill top, clamped
     const float thumbR = 3.0f;
 
     {
