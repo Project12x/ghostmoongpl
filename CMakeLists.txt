@@ -15,6 +15,13 @@ target_include_directories(ghostmoongpl INTERFACE
 target_compile_features(ghostmoongpl INTERFACE cxx_std_20)
 add_library(ghostmoongpl::ghostmoongpl ALIAS ghostmoongpl)
 
+# Header-only JUCE UI primitives (consumer must provide JUCE on the include path).
+add_library(ghostmoongpl_ui INTERFACE)
+target_include_directories(ghostmoongpl_ui INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/ui/include")
+target_compile_features(ghostmoongpl_ui INTERFACE cxx_std_20)
+add_library(ghostmoongpl::ui ALIAS ghostmoongpl_ui)
+
 option(GHOSTMOONGPL_BUILD_TESTS "Build GhostmoonGPL reverb tests (GoogleTest)" OFF)
 if(GHOSTMOONGPL_BUILD_TESTS)
     enable_testing()
