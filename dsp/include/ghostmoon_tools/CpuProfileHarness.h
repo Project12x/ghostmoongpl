@@ -47,6 +47,8 @@ struct CpuProfileSpec {
   int measureBlocks = 2000;
   std::function<std::unique_ptr<juce::AudioProcessor>()> makeProcessor;
   std::function<gm::CpuSectionProfiler &(juce::AudioProcessor &)> getProfiler;
+  std::function<void(juce::AudioProcessor &)> resetCounters;
+  std::function<std::string(juce::AudioProcessor &, int)> getCountersJson;
   std::vector<CpuProfileScenario> scenarios;
 };
 
@@ -87,6 +89,9 @@ inline int runCpuProfile(const CpuProfileSpec &spec, const char *jsonPath) {
 
     for (int b = 0; b < spec.warmupBlocks; ++b)
       processProfileBlock(b);
+
+    if (spec.resetCounters)
+      spec.resetCounters(*proc);
 
     auto &prof = spec.getProfiler(*proc);
     prof.reset();
@@ -167,7 +172,13 @@ inline int runCpuProfile(const CpuProfileSpec &spec, const char *jsonPath) {
            << ", \"max_us\": " << snaps[i].maxUs()
            << ", \"calls\": " << snaps[i].calls << " }";
     }
-    json << " } }";
+    json << " }";
+    if (spec.getCountersJson) {
+      const auto countersJson = spec.getCountersJson(*proc, spec.measureBlocks);
+      if (!countersJson.empty())
+        json << ", \"counters\": " << countersJson;
+    }
+    json << " }";
 
     proc->releaseResources();
   }
