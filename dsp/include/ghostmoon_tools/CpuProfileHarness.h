@@ -34,6 +34,9 @@ struct CpuProfileScenario {
   const char *name;
   const char *description;
   std::function<void(juce::AudioProcessor &, juce::AudioBuffer<float> &)> setup;
+  std::function<void(juce::AudioProcessor &, juce::AudioBuffer<float> &,
+                     juce::MidiBuffer &, int64_t)>
+      prepareBlock;
 };
 
 struct CpuProfileSpec {
@@ -74,11 +77,16 @@ inline int runCpuProfile(const CpuProfileSpec &spec, const char *jsonPath) {
     if (sc.setup)
       sc.setup(*proc, buf);
 
-    for (int b = 0; b < spec.warmupBlocks; ++b) {
+    auto processProfileBlock = [&](int64_t blockIndex) {
       buf.clear();
       juce::MidiBuffer midi;
+      if (sc.prepareBlock)
+        sc.prepareBlock(*proc, buf, midi, blockIndex);
       proc->processBlock(buf, midi);
-    }
+    };
+
+    for (int b = 0; b < spec.warmupBlocks; ++b)
+      processProfileBlock(b);
 
     auto &prof = spec.getProfiler(*proc);
     prof.reset();
@@ -86,10 +94,8 @@ inline int runCpuProfile(const CpuProfileSpec &spec, const char *jsonPath) {
 
     uint64_t wallNs = 0;
     for (int b = 0; b < spec.measureBlocks; ++b) {
-      buf.clear();
-      juce::MidiBuffer midi;
       const auto t0 = gm::CpuSectionProfiler::Clock::now();
-      proc->processBlock(buf, midi);
+      processProfileBlock(spec.warmupBlocks + b);
       wallNs += static_cast<uint64_t>(
           std::chrono::duration_cast<std::chrono::nanoseconds>(
               gm::CpuSectionProfiler::Clock::now() - t0)
